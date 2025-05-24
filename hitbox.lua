@@ -22,8 +22,6 @@ local settings = {
     minHitboxSize = 20,
     maxHitboxSize = 500,
     hitboxTransparency = 1,
-    highlightEntities = false,
-    highlightColor = Color3.fromRGB(255, 0, 0),
     
     updateInterval = 0.2,
     debugMode = true,
@@ -53,7 +51,7 @@ local modifiedCount = 0
 
 local function debugPrint(...)
     if settings.debugMode then
-        print("[DH Hitboxes]", ...)
+        print("[Slavan Hub]", ...)
     end
 end
 
@@ -145,16 +143,6 @@ local function modifyHitbox(model)
                     part.Size = settings.hitboxSize
                     part.Transparency = settings.hitboxTransparency
                     part.CanCollide = false
-                    
-                    if settings.highlightEntities then
-                        local highlight = Instance.new("Highlight")
-                        highlight.Name = "EntityHighlight"
-                        highlight.FillColor = settings.highlightColor
-                        highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
-                        highlight.FillTransparency = 0.7
-                        highlight.OutlineTransparency = 0
-                        highlight.Parent = part
-                    end
                 end
             end
             
@@ -216,9 +204,6 @@ local function resetHitboxes()
                         part.Size = partData.originalSize
                         part.Transparency = partData.originalTransparency  
                         part.CanCollide = partData.originalCanCollide
-                        
-                        local highlight = part:FindFirstChild("EntityHighlight")
-                        if highlight then highlight:Destroy() end
                     end)
                 end
             end
@@ -230,8 +215,8 @@ local function resetHitboxes()
 end
 
 local Window = Fluent:CreateWindow({
-    Title = "Dungeon Heroes Hitbox Mod",
-    SubTitle = "Working hitboxes for all enemies",
+    Title = "Slavan Hub",
+    SubTitle = "By NotAka",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -313,20 +298,6 @@ local TransparencySlider = HitboxTab:AddSlider("HitboxTransparency", {
     end
 })
 
-local HighlightToggle = HitboxTab:AddToggle("HighlightToggle", {
-    Title = "Highlight Entities",
-    Description = "Shows colored highlights on modified entities",
-    Default = settings.highlightEntities
-})
-
-HighlightToggle:OnChanged(function(Value)
-    settings.highlightEntities = Value
-    if settings.hitboxEnabled then
-        resetHitboxes()
-        scanForEntities()
-    end
-end)
-
 HitboxTab:AddButton({
     Title = "Full Scan",
     Description = "Scan all areas for entities to modify",
@@ -341,6 +312,11 @@ HitboxTab:AddButton({
     Callback = function()
         resetHitboxes()
     end
+})
+
+HitboxTab:AddParagraph({
+    Title = "Credits",
+    Content = "Slavan Hub - Premium Hitbox Script\nCreated by NotAka"
 })
 
 RunService.Heartbeat:Connect(function()
@@ -372,11 +348,11 @@ end)
 
 SaveManager:SetLibrary(Fluent)
 SaveManager:IgnoreThemeSettings()
-SaveManager:SetFolder("DungeonHeroesHitbox")
+SaveManager:SetFolder("SlavanHub")
 SaveManager:BuildConfigSection(SettingsTab)
 
 InterfaceManager:SetLibrary(Fluent)
-InterfaceManager:SetFolder("DungeonHeroesHitbox") 
+InterfaceManager:SetFolder("SlavanHub") 
 InterfaceManager:BuildInterfaceSection(SettingsTab)
 
 updateCharacterReferences()
@@ -384,4 +360,4 @@ if settings.hitboxEnabled then
     scanForEntities()
 end
 
-debugPrint("Dungeon Heroes Hitbox Mod loaded successfully!")
+debugPrint("Slavan Hub by NotAka loaded successfully!")
