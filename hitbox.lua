@@ -17,7 +17,7 @@ local Humanoid = Character:WaitForChild("Humanoid")
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 
 local settings = {
-    hitboxEnabled = true,
+    hitboxEnabled = false,
     hitboxSize = Vector3.new(10000, 10000, 10000),
     minHitboxSize = 20,
     maxHitboxSize = 500,
