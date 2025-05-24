@@ -229,7 +229,7 @@ local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
 
 HitboxTab:AddParagraph({
     Title = "Enemy Hitbox Modifier",
-    Content = "Modifies hitboxes of all enemies in the game for easier combat"
+    Content = "Modifies hitboxes of all enemies in the game"
 })
 
 local MainStatus = HitboxTab:AddParagraph({
@@ -239,7 +239,7 @@ local MainStatus = HitboxTab:AddParagraph({
 
 local HitboxToggle = HitboxTab:AddToggle("HitboxToggle", {
     Title = "Enable Hitboxes",
-    Description = "Modifies enemy hitboxes for easier targeting",
+    Description = "Modifies enemy hitboxes",
     Default = settings.hitboxEnabled
 })
 
@@ -316,7 +316,7 @@ HitboxTab:AddButton({
 
 HitboxTab:AddParagraph({
     Title = "Credits",
-    Content = "Slavan Hub - Premium Hitbox Script\nCreated by NotAka"
+    Content = "Slavan Hub by NotAka"
 })
 
 RunService.Heartbeat:Connect(function()
@@ -360,4 +360,4 @@ if settings.hitboxEnabled then
     scanForEntities()
 end
 
-debugPrint("Slavan Hub by NotAka loaded successfully!")
+debugPrint("Slavan Hub loaded successfully!")
