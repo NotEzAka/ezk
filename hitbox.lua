@@ -26,6 +26,10 @@ local settings = {
     updateInterval = 0.2,
     debugMode = true,
     
+    -- Kill Aura Settings
+    killAuraEnabled = false,
+    killAuraDelay = 0.25,
+    
     dungeonEnemies = {
         "Bear", "Goblin", "Bear Cub", "Goblin Archer", "Goblin Brute", "Goblin Witch",
         "Wolf", "Crowling", "Direwolf", "Giant Crow", "Tengu Crow", "Tengu Crow Sorcerer",
@@ -48,6 +52,7 @@ local settings = {
 local modified = {}
 local lastScanTime = 0
 local modifiedCount = 0
+local killAuraRunning = false
 
 local function debugPrint(...)
     if settings.debugMode then
@@ -214,6 +219,44 @@ local function resetHitboxes()
     debugPrint("All hitboxes reset")
 end
 
+-- Kill Aura Function
+local function startKillAura()
+    if killAuraRunning then return end
+    killAuraRunning = true
+    
+    debugPrint("Kill Aura started with delay:", settings.killAuraDelay)
+    
+    spawn(function()
+        while settings.killAuraEnabled and killAuraRunning do
+            pcall(function()
+                local mobsFolder = workspace:FindFirstChild("Mobs")
+                if mobsFolder then
+                    local mobs = {}
+                    for _, v in next, mobsFolder:GetChildren() do
+                        table.insert(mobs, v)
+                    end
+                    
+                    if #mobs > 0 then
+                        ReplicatedStorage:WaitForChild("Systems"):WaitForChild("Combat"):WaitForChild("PlayerAttack"):FireServer(mobs)
+                        debugPrint("Kill Aura attacking", #mobs, "mobs")
+                    end
+                else
+                    debugPrint("Mobs folder not found")
+                end
+            end)
+            task.wait(settings.killAuraDelay)
+        end
+        killAuraRunning = false
+        debugPrint("Kill Aura stopped")
+    end)
+end
+
+local function stopKillAura()
+    killAuraRunning = false
+    debugPrint("Kill Aura stopped")
+end
+
+-- GUI Setup
 local Window = Fluent:CreateWindow({
     Title = "Slavan Hub",
     SubTitle = "By NotAka",
@@ -225,8 +268,10 @@ local Window = Fluent:CreateWindow({
 })
 
 local HitboxTab = Window:AddTab({ Title = "Hitboxes", Icon = "target" })
+local KillAuraTab = Window:AddTab({ Title = "Kill Aura", Icon = "swords" }) -- New Kill Aura Tab
 local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
 
+-- Hitbox Tab
 HitboxTab:AddParagraph({
     Title = "Enemy Hitbox Modifier",
     Content = "Modifies hitboxes of all enemies in the game"
@@ -314,11 +359,79 @@ HitboxTab:AddButton({
     end
 })
 
+-- Kill Aura Tab
+KillAuraTab:AddParagraph({
+    Title = "Kill Aura",
+    Content = "Automatically attacks all enemies in range"
+})
+
+local KillAuraStatus = KillAuraTab:AddParagraph({
+    Title = "Current Status",
+    Content = "Kill Aura: " .. (settings.killAuraEnabled and "✅" or "❌") .. " | Delay: " .. settings.killAuraDelay .. "s"
+})
+
+local KillAuraToggle = KillAuraTab:AddToggle("KillAuraToggle", {
+    Title = "Enable Kill Aura",
+    Description = "Automatically attacks all enemies",
+    Default = settings.killAuraEnabled
+})
+
+KillAuraToggle:OnChanged(function(Value)
+    settings.killAuraEnabled = Value
+    if Value then
+        startKillAura()
+    else
+        stopKillAura()
+    end
+    KillAuraStatus:SetDesc("Kill Aura: " .. (settings.killAuraEnabled and "✅" or "❌") .. " | Delay: " .. settings.killAuraDelay .. "s")
+end)
+
+local DelaySlider = KillAuraTab:AddSlider("KillAuraDelay", {
+    Title = "Attack Delay",
+    Description = "Delay between attacks (seconds)",
+    Default = settings.killAuraDelay,
+    Min = 0.1,
+    Max = 2,
+    Rounding = 2,
+    Callback = function(Value)
+        settings.killAuraDelay = Value
+        KillAuraStatus:SetDesc("Kill Aura: " .. (settings.killAuraEnabled and "✅" or "❌") .. " | Delay: " .. settings.killAuraDelay .. "s")
+    end
+})
+
+KillAuraTab:AddButton({
+    Title = "Force Attack Once",
+    Description = "Triggers one attack on all visible enemies",
+    Callback = function()
+        pcall(function()
+            local mobsFolder = workspace:FindFirstChild("Mobs")
+            if mobsFolder then
+                local mobs = {}
+                for _, v in next, mobsFolder:GetChildren() do
+                    table.insert(mobs, v)
+                end
+                
+                if #mobs > 0 then
+                    ReplicatedStorage:WaitForChild("Systems"):WaitForChild("Combat"):WaitForChild("PlayerAttack"):FireServer(mobs)
+                    debugPrint("Force attacked", #mobs, "mobs")
+                end
+            end
+        end)
+    end
+})
+
+-- Credits paragraph in both tabs
 HitboxTab:AddParagraph({
     Title = "Credits",
     Content = "Slavan Hub by NotAka"
 })
 
+KillAuraTab:AddParagraph({
+    Title = "Credits",
+    Content = "Slavan Hub by NotAka"
+})
+
+-- Main loop
 RunService.Heartbeat:Connect(function()
     pcall(function()
         if not Character or not Character.Parent then
@@ -337,6 +450,11 @@ LocalPlayer.CharacterAdded:Connect(function(newCharacter)
     wait(1)
     updateCharacterReferences()
     debugPrint("Character respawned, systems reloaded")
+    
+    -- Restart kill aura if it was enabled
+    if settings.killAuraEnabled and not killAuraRunning then
+        startKillAura()
+    end
 end)
 
 workspace.ChildAdded:Connect(function(child)
@@ -358,6 +476,10 @@ InterfaceManager:BuildInterfaceSection(SettingsTab)
 updateCharacterReferences()
 if settings.hitboxEnabled then
     scanForEntities()
+end
+
+if settings.killAuraEnabled then
+    startKillAura()
 end
 
 debugPrint("Slavan Hub loaded successfully!")
